@@ -11,6 +11,8 @@ import Combine
 
 
 class LocationManager: NSObject, ObservableObject{
+  @Published var selectedLocation: String? = nil
+  
   private let locationMangaer = CLLocationManager()
   
   override init(){

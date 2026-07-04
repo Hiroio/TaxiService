@@ -8,10 +8,14 @@
 import SwiftUI
 
 struct MenuButton: View {
+  @EnvironmentObject var navigation: NavigationManager
     var body: some View {
 		Button{
+		  if navigation.sheetState == .search{
+			 navigation.sheetState = nil
+		  }
 		}label: {
-		  Image(systemName: "line.3.horizontal")
+		  Image(systemName: navigation.sheetState?.menuIcon ?? "line.3.horizontal")
 			 .font(.headline.weight(.bold))
 			 .foregroundStyle(.black)
 			 .padding()
@@ -27,4 +31,5 @@ struct MenuButton: View {
 
 #Preview {
   MenuButton()
+	 .environmentObject(NavigationManager.shared)
 }

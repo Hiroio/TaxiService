@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct LocationSearchView: View {
+  let panelState: PanelState
+  @ObservedObject var viewModel: LocationSearchViewModel
   @State private var userLocation: String = ""
-  @StateObject private var viewModel = LocationSearchViewModel()
-  
-    var body: some View {
+  var body: some View {
 		VStack(){
-		  VStack(alignment: .leading, spacing: 0){
-			 HStack{
+			  VStack(alignment: .leading, spacing: 0){
+				 HStack{
 				Image(systemName: "car.side.fill")
 				  .scaleEffect(x: -1)
 				
@@ -39,27 +39,34 @@ struct LocationSearchView: View {
 						.stroke(.secondary, lineWidth: 1)
 				  )
 			 }
-		  }
-		  .padding(.top)
-		  
-		  ScrollView{
-			 LazyVStack(spacing: 10){
-				ForEach(viewModel.result, id: \.self) { item in
-				  SearchComponent(title: item.title, subTitle: item.subtitle)
+			  }
+			  .padding(.top)
+			  if panelState == .collapsed {
+				 EmptyView()
+			  }else if viewModel.result.isEmpty{
+				 Spacer()
+				 Text("qwerty")
+				 Spacer()
+			  }else{
+			 ScrollView{
+				LazyVStack(spacing: 10){
+				  ForEach(viewModel.result) { item in
+					 Button{
+						viewModel.selectLocation(item)
+					 }label:{
+						SearchComponent(title: item.title, subTitle: item.subtitle)
+					 }
+				  }
 				}
-			 }
-			 .animation(.easeInOut, value: viewModel.result.count)
-			 .padding()
-		  }
-		  Spacer()
-		}
-		.padding()
-    }
+				.animation(.easeInOut, value: viewModel.result.count)
+				.padding()
+				 }
+			  }
+			}
+			.padding()
+	  }
 }
 
 #Preview {
-    LocationSearchView()
+  LocationSearchView(panelState: .original, viewModel: .init())
 }
-
-
-

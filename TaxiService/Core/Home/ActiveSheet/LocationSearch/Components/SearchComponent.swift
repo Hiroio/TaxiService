@@ -25,7 +25,7 @@ struct SearchComponent: View {
 		  VStack(alignment: .leading){
 			 Text(title)
 				.font(.headline)
-			 Text(subtitle)
+			 Text(subTitle)
 				.font(.caption)
 				.foregroundStyle(.secondary)
 			 Divider()

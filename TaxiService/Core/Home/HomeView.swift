@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
-  @State private var searchActive: Bool = false
+  @EnvironmentObject var navigation: NavigationManager
     var body: some View {
 		ZStack{
 		  MapViewRepresentable()
@@ -20,15 +20,15 @@ struct HomeView: View {
 				.frame(maxWidth: .infinity, alignment: .leading)
 			 Spacer()
 			 Spacer()
-			 if !searchActive{
+			 if navigation.sheetState == nil{
 				Button{
 				  withAnimation() {
-					 searchActive.toggle()
+					 navigation.sheetState = .search
 				  }
 				}label:{
 				  LocationSearchActivationView()
 				}
-				.transition(.asymmetric(insertion: .opacity, removal: .scale))
+				.transition(.move(edge: .top).combined(with: .scale))
 				
 				.zIndex(1)
 			 }
@@ -36,17 +36,16 @@ struct HomeView: View {
 			 
 		  }
 		  .padding()
+		  
+		  if navigation.sheetState != nil{
+			 ActiveSheetView()
+				.transition(.move(edge: .bottom).combined(with: .opacity))
+		  }
 		}
-		
-		.sheet(isPresented: $searchActive) {
-		  LocationSearchView()
-			 .presentationDetents([.medium, .large])
-			 .presentationBackground(.white)
-		}
-		.animation(.linear, value: searchActive)
+		.animation(.linear, value: navigation.sheetState != nil)
     }
 }
 
 #Preview {
-    HomeView()
+  HomeView().environmentObject(NavigationManager.shared)
 }

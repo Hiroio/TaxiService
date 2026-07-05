@@ -15,13 +15,18 @@ class LocationSearchViewModel: NSObject, ObservableObject{
   
   @Published var result = [SearchResult]()
   @Published var panelState: PanelState = .original
+  @Published var searchState: SearchState = .main
+  @Published var locationSearchState: LocationSearchState = .text
   private let searchCompleter: MKLocalSearchCompleter = MKLocalSearchCompleter()
   
-  var queryFragment: String = "" {
+  @Published var queryFragment: String = "" {
 	 didSet{
 		self.searchCompleter.queryFragment = queryFragment
 	 }
   }
+  
+  var destinationLocation: String? = nil
+  var userLocation: String? = nil
   
   private let rideLocationManager = RideLocationManager.shared
   
@@ -36,6 +41,8 @@ class LocationSearchViewModel: NSObject, ObservableObject{
 		guard let result, let self else { return }
 		self.rideLocationManager.destination = result.mapItems.first
 		self.panelState = .collapsed
+		self.searchState = .main
+		self.destinationLocation = location.title
 	 }
   }
   

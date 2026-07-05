@@ -13,8 +13,11 @@ import Combine
 final class RideLocationManager: ObservableObject {
   static let shared = RideLocationManager()
   
+  @Published var mapState: MapState = .noInput
+  
   @Published var pickupLocation: CLLocationCoordinate2D?
   @Published var destination: MKMapItem?
+  @Published var destinationTitle: MKMapItem?
   @Published var route: MKRoute?
   @Published var distance: CLLocationDistance?
   @Published var price: Double?

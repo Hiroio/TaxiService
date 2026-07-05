@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
+  @Namespace var homeNameSpace
   @EnvironmentObject var navigation: NavigationManager
     var body: some View {
 		ZStack{
@@ -19,7 +20,6 @@ struct HomeView: View {
 			 MenuButton()
 				.frame(maxWidth: .infinity, alignment: .leading)
 			 Spacer()
-			 Spacer()
 			 if navigation.sheetState == nil{
 				Button{
 				  withAnimation() {
@@ -28,17 +28,15 @@ struct HomeView: View {
 				}label:{
 				  LocationSearchActivationView()
 				}
-				.transition(.move(edge: .top).combined(with: .scale))
-				
 				.zIndex(1)
+				.matchedGeometryEffect(id: SearchState.destination.geometryId, in: homeNameSpace)
 			 }
-			 Spacer()
 			 
 		  }
 		  .padding()
 		  
 		  if navigation.sheetState != nil{
-			 ActiveSheetView()
+			 ActiveSheetView(nameSpace: homeNameSpace)
 				.transition(.move(edge: .bottom).combined(with: .opacity))
 		  }
 		}
@@ -47,5 +45,7 @@ struct HomeView: View {
 }
 
 #Preview {
-  HomeView().environmentObject(NavigationManager.shared)
+  HomeView()
+	 .environmentObject(NavigationManager.shared)
+	 .environmentObject(LocationSearchViewModel())
 }

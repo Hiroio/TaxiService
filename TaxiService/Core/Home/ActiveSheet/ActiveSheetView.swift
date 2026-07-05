@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ActiveSheetView: View {
+  let nameSpace: Namespace.ID
   @EnvironmentObject var navigation: NavigationManager
   @State private var dragAmount: CGFloat = 0.0
-  
   @State private var gestureState: Bool = false
   
   @StateObject private var locationSearchViewModel = LocationSearchViewModel()
@@ -27,7 +27,7 @@ struct ActiveSheetView: View {
 			 
 			 switch navigation.sheetState {
 			 case .search:
-				LocationSearchView(panelState: locationSearchViewModel.panelState, viewModel: locationSearchViewModel)
+				LocationSearchView(nameSpace: nameSpace, panelState: locationSearchViewModel.panelState)
 			 case .payment:
 				EmptyView()
 			 case .driver:
@@ -38,6 +38,7 @@ struct ActiveSheetView: View {
 			 
 			 
 		  }
+		  .environmentObject(locationSearchViewModel)
 		  .padding()
 		  .frame(height: baseHeight - dragAmount, alignment: .top)
 		  .background(
@@ -53,7 +54,8 @@ struct ActiveSheetView: View {
 }
 
 #Preview {
-    ActiveSheetView()
+  @Previewable @Namespace var nameSpace
+  ActiveSheetView(nameSpace: nameSpace)
 	 .environmentObject(NavigationManager.shared)
 }
 

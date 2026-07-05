@@ -11,6 +11,7 @@ import MapKit
 
 struct MapViewRepresentable: UIViewRepresentable{
   @EnvironmentObject private var rideLocationManager: RideLocationManager
+  @EnvironmentObject private var navigation: NavigationManager
   let mapView = MKMapView()
   let locationManager = LocationManager()
   
@@ -24,8 +25,15 @@ struct MapViewRepresentable: UIViewRepresentable{
   }
   
   func updateUIView(_ uiView: UIViewType, context: Context) {
-	 if let coordinate = rideLocationManager.destination?.placemark.coordinate{
+	 if navigation.sheetState == nil {
+		context.coordinator.clearMapView()
+		context.coordinator.centerUserLocation()
+		return
+	 }
+	 
+	 if let coordinate = rideLocationManager.destination?.placemark.coordinate {
 		context.coordinator.addAndSelectAnnotation(withCoordinate: coordinate)
+		context.coordinator.configurePolyLine(with: coordinate)
 	 }
   }
   
@@ -38,17 +46,17 @@ struct MapViewRepresentable: UIViewRepresentable{
 extension MapViewRepresentable{
   class MapCoordinator: NSObject, MKMapViewDelegate{
 	 
-//	 MARK: - Properties
+	 //	 MARK: - Properties
 	 let parent: MapViewRepresentable
 	 
-//	 MARK: - Lifecycle
+	 //	 MARK: - Lifecycle
 	 
 	 init(parent: MapViewRepresentable) {
 		self.parent = parent
 		super.init()
 	 }
 	 
-//	 MARK: - MKMapViewDelegate
+	 //	 MARK: - MKMapViewDelegate
 	 
 	 func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
 		let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: userLocation.coordinate.latitude, longitude: userLocation.coordinate.longitude), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
@@ -56,14 +64,67 @@ extension MapViewRepresentable{
 		parent.mapView.setRegion(region, animated: true)
 	 }
 	 
-//	 MARK: - Helpers
+	 //	 MARK: - Helpers
 	 
 	 func addAndSelectAnnotation(withCoordinate coordinate: CLLocationCoordinate2D){
+		self.clearMapView()
+		
 		let anno = MKPointAnnotation()
 		anno.coordinate = coordinate
 		self.parent.mapView.addAnnotation(anno)
+		self.parent.mapView.showAnnotations(parent.mapView.annotations, animated: true)
 		self.parent.mapView.selectAnnotation(anno, animated: true)
-		self.parent.mapView.setCamera(MKMapCamera(lookingAtCenter: coordinate, fromDistance: 1000, pitch: 0, heading: 0), animated: true)
+	 }
+	 
+	 func getDestinationRoute(
+		from userLocation: CLLocationCoordinate2D,
+		to destinationLocation: CLLocationCoordinate2D,
+		completion: @escaping(MKRoute) -> Void
+	 ){
+		let userPlaceMark = MKPlacemark(coordinate: userLocation)
+		let destinationPlaceMark = MKPlacemark(coordinate: destinationLocation)
+		
+		let request = MKDirections.Request()
+		request.source = MKMapItem(placemark: userPlaceMark)
+		request.destination = MKMapItem(placemark: destinationPlaceMark)
+		
+		let directions = MKDirections(request: request)
+		
+		directions.calculate() { response, error in
+		  if let error = error {
+			 print("DEBUG: Failed to load direction with error: \(error.localizedDescription)")
+		  } else if let route = response?.routes.first {
+			 completion(route)
+		  }
+		}
+	 }
+	 
+	 
+	 func configurePolyLine(with destinationCoordinate: CLLocationCoordinate2D) {
+		getDestinationRoute(from: parent.mapView.userLocation.coordinate, to: destinationCoordinate) { route in
+		  guard self.parent.navigation.sheetState != nil else { return }
+		  self.parent.mapView.addOverlay(route.polyline)
+		}
+	 }
+	 
+	 func mapView(_ mapView: MKMapView, rendererFor overlay: any MKOverlay) -> MKOverlayRenderer {
+		let overlay = MKPolylineRenderer(overlay: overlay)
+		overlay.strokeColor = .cyan
+		overlay.alpha = 0.5
+		overlay.lineWidth = 6
+		
+		return overlay
+	 }
+	 
+	 
+	 func clearMapView(){
+		let annotations = parent.mapView.annotations.filter { !($0 is MKUserLocation) }
+		self.parent.mapView.removeAnnotations(annotations)
+		self.parent.mapView.removeOverlays(self.parent.mapView.overlays)
+	 }
+	 
+	 func centerUserLocation(){
+		self.parent.mapView.setCenter(self.parent.mapView.userLocation.coordinate, animated: true)
 	 }
   }
 }

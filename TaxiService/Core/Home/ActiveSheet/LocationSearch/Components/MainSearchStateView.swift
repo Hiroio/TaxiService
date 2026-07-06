@@ -14,7 +14,7 @@ struct MainSearchStateView: View {
 	 VStack(alignment: .leading, spacing: 0){
 		Button{
 		  withAnimation(){
-			 viewModel.searchState = .userLocation
+			 viewModel.changeSearchState(to: .userLocation)
 			 viewModel.panelState = .expanded
 		  }
 		}label: {
@@ -29,7 +29,7 @@ struct MainSearchStateView: View {
 		
 		Button{
 		  withAnimation(){
-			 viewModel.searchState = .destination
+			 viewModel.changeSearchState(to: .destination)
 			 viewModel.panelState = .expanded
 		  }
 		}label: {

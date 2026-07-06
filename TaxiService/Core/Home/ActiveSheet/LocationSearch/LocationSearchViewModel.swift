@@ -15,8 +15,6 @@ class LocationSearchViewModel: NSObject, ObservableObject{
   
   @Published var result = [SearchResult]()
   @Published var panelState: PanelState = .original
-  @Published var searchState: SearchState = .main
-  @Published var locationSearchState: LocationSearchState = .text
   private let searchCompleter: MKLocalSearchCompleter = MKLocalSearchCompleter()
   
   @Published var queryFragment: String = "" {
@@ -29,29 +27,80 @@ class LocationSearchViewModel: NSObject, ObservableObject{
   var userLocation: String? = nil
   
   private let rideLocationManager = RideLocationManager.shared
-  
+  private var cancellables = Set<AnyCancellable>()
+
   override init(){
 	 super.init()
 	 searchCompleter.delegate = self
 	 searchCompleter.queryFragment = queryFragment
+
+	 rideLocationManager.objectWillChange
+		.sink { [weak self] _ in
+		  self?.objectWillChange.send()
+		}
+		.store(in: &cancellables)
   }
   
-  func selectLocation(_ location: SearchResult){
-	 searchForLocation(location.location) {[weak self] result, _ in
-		guard let result, let self else { return }
-		self.rideLocationManager.destination = result.mapItems.first
-		self.panelState = .collapsed
-		self.searchState = .main
-		self.destinationLocation = location.title
+  var searchState: SearchState {
+	 rideLocationManager.searchState
+  }
+  
+  var locationSearchState: LocationSearchState{
+	 rideLocationManager.locationSearchState
+  }
+  
+  var mapSearchLocationResult: String? {
+	 rideLocationManager.destinationTitle?.name
+  }
+}
+  
+extension LocationSearchViewModel{
+  func submitLocationSelection(_ location: SearchResult? = nil) {
+	 switch locationSearchState {
+	 case .text:
+		guard let location else { return }
+		submitTextLocation(location)
+	 case .map:
+		submitMapPinLocation()
 	 }
   }
   
+  func submitTextLocation(_ location: SearchResult){
+	 searchForLocation(location.location) {[weak self] result, _ in
+		guard let result, let self else { return }
+		self.rideLocationManager.setDestination(result.mapItems.first)
+		self.destinationLocation = location.title
+		self.finishLocationSelection()
+	 }
+  }
+  
+  func submitMapPinLocation() {
+	 guard let item = self.rideLocationManager.destinationTitle else { return }
+	 
+		self.rideLocationManager.setDestination(item)
+		self.destinationLocation = item.name
+		self.finishLocationSelection()
+	 
+  }
+	  
   func searchForLocation(_ location: MKLocalSearchCompletion, completion: @escaping MKLocalSearch.CompletionHandler){
 	 let searchRequest = MKLocalSearch.Request()
 	 searchRequest.naturalLanguageQuery = location.title.appending(location.subtitle)
 	 
 	 let search = MKLocalSearch(request: searchRequest)
 	 search.start(completionHandler: completion)
+  }
+  func changeSearchState(to state: SearchState){
+	 rideLocationManager.changeSearchState(to: state)
+  }
+  
+  func changeLocationSearchState(to state: LocationSearchState){
+	 rideLocationManager.changeLocationSearchState(to: state)
+  }
+  
+  private func finishLocationSelection() {
+	 panelState = .collapsed
+	 rideLocationManager.resetSearchMode()
   }
 }
 

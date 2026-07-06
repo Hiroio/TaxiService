@@ -64,6 +64,20 @@ extension MapViewRepresentable{
 		parent.mapView.setRegion(region, animated: true)
 	 }
 	 
+	 func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
+		guard parent.rideLocationManager.locationSearchState == .map && parent.navigation.sheetState != nil else { return }
+		
+		DispatchQueue.main.async{ [weak self] in
+		  self?.parent.rideLocationManager.destinationTitle = nil
+		}
+	 }
+	 
+	 func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+		guard parent.rideLocationManager.locationSearchState == .map && parent.navigation.sheetState != nil else { return }
+		
+		parent.rideLocationManager.updateDestinationTitle(for: parent.mapView.region.center)
+	 }
+	 
 	 //	 MARK: - Helpers
 	 
 	 func addAndSelectAnnotation(withCoordinate coordinate: CLLocationCoordinate2D){

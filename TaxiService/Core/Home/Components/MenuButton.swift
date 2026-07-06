@@ -13,7 +13,6 @@ struct MenuButton: View {
 		Button{
 		  if navigation.sheetState == .search{
 			 navigation.sheetState = nil
-			 RideLocationManager.shared.mapState = .noInput
 		  }
 		}label: {
 		  Image(systemName: navigation.sheetState?.menuIcon ?? "line.3.horizontal")

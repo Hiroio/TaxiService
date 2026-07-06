@@ -21,26 +21,36 @@ struct SearchTextField: View {
 				.frame(width: 2)
 				.padding(.leading, 5)
 			 
-			 HStack{
-				TextField("", text: $viewModel.queryFragment, prompt: Text(searchState.textfieldText))
+			 if viewModel.locationSearchState == .map{
+				Text(viewModel.mapSearchLocationResult ?? "We trying to figure it out")
 				  .padding(.leading, 10)
 				  .frame(height: 55)
+				  .frame(maxWidth: .infinity)
 				  .background(
 					 UnevenRoundedRectangle(cornerRadii: .init(topLeading: 10, bottomLeading: 10, bottomTrailing: 25, topTrailing: 25))
 						.fill(.black.opacity(0.05))
 				  )
-				
-				Button{
-				  withAnimation(){
-					 viewModel.queryFragment = ""
+			 }else{
+				HStack{
+				  TextField("", text: $viewModel.queryFragment, prompt: Text(searchState.textfieldText))
+					 .padding(.leading, 10)
+					 .frame(height: 55)
+					 .background(
+						UnevenRoundedRectangle(cornerRadii: .init(topLeading: 10, bottomLeading: 10, bottomTrailing: 25, topTrailing: 25))
+						  .fill(.black.opacity(0.05))
+					 )
+				  
+				  Button{
+					 withAnimation(){
+						viewModel.queryFragment = ""
+					 }
+				  }label:{
+					 Image(systemName: "xmark.circle.fill")
+						.padding(.trailing)
 				  }
-				}label:{
-				  Image(systemName: "xmark.circle.fill")
-					 .padding(.trailing)
+				  .disabled(viewModel.queryFragment.isEmpty)
 				}
-				.disabled(viewModel.queryFragment.isEmpty)
 			 }
-			 .disabled(viewModel.locationSearchState == .map)
 		  }
 		  .foregroundStyle(.secondary)
 		  .frame(height: 50)
@@ -57,10 +67,12 @@ struct SearchTextField: View {
 		  .compositingGroup()
 		  .matchedGeometryEffect(id: searchState.geometryId, in: nameSpace)
 		  
+		  
 		  if viewModel.locationSearchState == .text{
 			 Button{
 				withAnimation(){
-				  viewModel.locationSearchState = .map
+				  viewModel.changeLocationSearchState(to: .map)
+				  viewModel.panelState = .collapsed
 				}
 			 }label:{
 				HStack{

@@ -24,26 +24,12 @@ struct LocationSearchView: View {
 		  }
 		}
 		.padding(.top)
-		if panelState == .collapsed {
+		
+		
+		if panelState == .collapsed && viewModel.locationSearchState != .map {
 		  EmptyView()
-		}else if viewModel.result.isEmpty{
-		  Spacer()
-		  Text("qwerty")
-		  Spacer()
 		}else{
-		  ScrollView{
-			 LazyVStack(spacing: 10){
-				ForEach(viewModel.result) { item in
-				  Button{
-					 viewModel.selectLocation(item)
-				  }label:{
-					 SearchComponent(title: item.title, subTitle: item.subtitle)
-				  }
-				}
-			 }
-			 .animation(.easeInOut, value: viewModel.result.count)
-			 .padding()
-		  }
+		  SearchResultView()
 		}
 	 }
   }
